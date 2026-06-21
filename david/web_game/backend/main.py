@@ -1,7 +1,17 @@
 from fastapi import FastAPI
-from game_state import GameState
+import json
+from backend.game_state import GameState
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 game = GameState()
 
@@ -24,3 +34,11 @@ def end_turn():
         "status": "ok",
         "state": get_state()
     }
+
+with open("backend/hun_trees.json", "r", encoding="utf-8") as f:
+    TREES = json.load(f)
+
+
+@app.get("/trees")
+def get_trees():
+    return TREES

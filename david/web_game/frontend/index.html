@@ -2,8 +2,17 @@
 <html>
 
 <head>
+    <meta charset="UTF-8">
+
     <title>Strategy Game</title>
+
     <link rel="stylesheet" href="style.css">
+
+    <!-- Leaflet CSS -->
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet/dist/leaflet.css"
+    />
 </head>
 
 <body>
@@ -11,9 +20,26 @@
 <div class="layout">
 
     <div class="sidebar">
-        <button onclick="openProfile()">Profile</button>
-        <button onclick="openMissions()">Missions</button>
-        <button onclick="endTurn()">End Turn</button>
+
+        <button onclick="openProfile()">
+            Profile
+        </button>
+
+        <button onclick="openMissions()">
+            Missions
+        </button>
+
+        <button
+            id="touringButton"
+            onclick="toggleTouring()"
+        >
+            Touring
+        </button>
+
+        <button onclick="endTurn()">
+            End Turn
+        </button>
+
     </div>
 
     <div class="main">
@@ -22,9 +48,8 @@
             <div id="time"></div>
         </div>
 
-        <div class="map">
-            MAP AREA (placeholder for teammate later)
-        </div>
+        <!-- Interactive map -->
+        <div id="map"></div>
 
         <div class="resources">
             <div id="resources"></div>
@@ -34,7 +59,12 @@
 
 </div>
 
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<!-- Your code -->
 <script src="app.js"></script>
+<script src="maps/touring.js"></script>
 
 </body>
 </html>

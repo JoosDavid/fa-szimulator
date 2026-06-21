@@ -23,8 +23,8 @@ class GameState:
             self.day += 1
 
         # resource changes per turn
-        self.elegedettseg += 1
-        self.szakertelem += 2
+        self.elegedettseg -= 1
+        self.szakertelem += 1
 
     def get_time(self):
         return f"Day {self.day} - {self.hour:02d}:{self.minute:02d}"

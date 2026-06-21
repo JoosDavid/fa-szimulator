@@ -35,9 +35,9 @@ body {
     padding: 10px;
 }
 
-.map {
+#map {
     flex: 1;
-    background: #6aa36a;
+    width: 100%;
 }
 
 .resources {
