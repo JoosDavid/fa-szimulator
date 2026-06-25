@@ -9,6 +9,7 @@ const treeIcon = L.icon({
     iconAnchor: [12, 12]
 });
 
+
 async function setTouringMap() {
 
     window.mapMode = "touring";
@@ -22,7 +23,17 @@ async function setTouringMap() {
 
     document.getElementById("map").innerHTML = "";
 
-    map = L.map("map").setView([47.1625, 19.5033], 7);
+    const HUNGARY_BOUNDS = [
+        [45.74, 16.11], // SW corner
+        [48.58, 22.90]  // NE corner
+    ]; 
+
+    map = L.map("map", {
+        maxBounds: HUNGARY_BOUNDS,
+        maxBoundsViscosity: 1.0,   // <-- IMPORTANT (hard lock)
+        minZoom: 7,
+        maxZoom: 18
+    }).setView([47.1625, 19.5033], 7);
 
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
@@ -33,6 +44,7 @@ async function setTouringMap() {
 
     document.getElementById("touringButton").innerText = "Budapest";
 }
+
 
 function setBudapestMap() {
 
@@ -45,7 +57,17 @@ function setBudapestMap() {
 
     document.getElementById("map").innerHTML = "";
 
-    map = L.map("map").setView([47.4979, 19.0402], 12);
+    const BUDAPEST_BOUNDS = [
+        [47.35, 18.85],
+        [47.62, 19.40]
+    ];
+
+    map = L.map("map", {
+        maxBounds: BUDAPEST_BOUNDS,
+        maxBoundsViscosity: 1.0,
+        minZoom: 11,
+        maxZoom: 18
+    }).setView([47.4979, 19.0402], 12);
 
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
