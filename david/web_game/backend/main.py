@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from shapely.geometry import Point
-from backend.geo import get_random_district, DISTRICTS
+from backend.geo import get_random_districts, DISTRICTS
 import csv
 
 app = FastAPI()
@@ -57,28 +57,27 @@ def end_turn():
 # TREES FROM CSV
 # ----------------------------------
 
-CURRENT_DISTRICT = None
+CURRENT_DISTRICTS = None
 
 @app.get("/touring/start")
 def start_touring():
 
-    global CURRENT_DISTRICT
-    CURRENT_DISTRICT = get_random_district()
+    global CURRENT_DISTRICTS
+
+    CURRENT_DISTRICTS = get_random_districts(10)
 
     return {
-        "name": str(CURRENT_DISTRICT.get("name", "unknown")),
-        "id": str(CURRENT_DISTRICT.name)
+        "count": len(CURRENT_DISTRICTS),
+        "names": CURRENT_DISTRICTS["name"].tolist()
     }
 
 @app.get("/trees")
 def get_trees():
 
-    global CURRENT_DISTRICT
+    global CURRENT_DISTRICTS
 
-    if CURRENT_DISTRICT is None:
+    if CURRENT_DISTRICTS is None:
         return []
-
-    polygon = CURRENT_DISTRICT.geometry
 
     trees = []
 
@@ -91,17 +90,22 @@ def get_trees():
             try:
                 lat = float(row["lat"])
                 lon = float(row["lon"])
+                point = Point(lon, lat)
 
-                point = Point(lon, lat)  # IMPORTANT: lon, lat order
+                # check against ALL sampled districts
+                for _, district in CURRENT_DISTRICTS.iterrows():
 
-                if polygon.contains(point):
+                    if district.geometry.contains(point):
 
-                    row["lat"] = lat
-                    row["lon"] = lon
-
-                    trees.append(row)
+                        trees.append({
+                            "lat": lat,
+                            "lon": lon
+                        })
+                        break  # avoid duplicates
 
             except:
-                pass
+                continue
+
+    print("Trees returned:", len(trees))
 
     return trees

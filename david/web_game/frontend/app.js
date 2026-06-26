@@ -1,23 +1,40 @@
-let mapMode = "budapest";
-
 async function loadState() {
 
-    const res = await fetch("/state");
-    const data = await res.json();
+    try {
+        const res = await fetch("/state");
+        const data = await res.json();
 
-    document.getElementById("time").innerText = data.time;
+        document.getElementById("time").innerText = data.time;
 
-    document.getElementById("resources").innerText =
-        `Elégedettség: ${data.elegedettseg} | ` +
-        `Szakértelem: ${data.szakertelem} | ` +
-        `Furgon: ${data.furgon}`;
+        document.getElementById("resources").innerText =
+            `Elégedettség: ${data.elegedettseg} | ` +
+            `Szakértelem: ${data.szakertelem} | ` +
+            `Furgon: ${data.furgon}`;
+
+    } catch (err) {
+        console.error("Failed to load state:", err);
+    }
 }
 
 async function endTurn() {
 
-    await fetch("/end_turn", { method: "POST" });
+    try {
+        const res = await fetch("/end_turn", {
+            method: "POST"
+        });
 
-    await loadState();
+        const data = await res.json();
+
+        document.getElementById("time").innerText = data.time;
+
+        document.getElementById("resources").innerText =
+            `Elégedettség: ${data.elegedettseg} | ` +
+            `Szakértelem: ${data.szakertelem} | ` +
+            `Furgon: ${data.furgon}`;
+
+    } catch (err) {
+        console.error("End turn failed:", err);
+    }
 }
 
 function openProfile() {
@@ -28,13 +45,32 @@ function openMissions() {
     console.log("Mission clicked");
 }
 
-/* Called from Touring button */
+/* -----------------------------
+   TOURING TOGGLE (IMPORTANT)
+------------------------------*/
 function toggleTouring() {
 
+    console.log("TOURING BUTTON CLICKED");
+
+    const btn = document.getElementById("touringButton");
+
+    if (!window.mapMode) {
+        window.mapMode = "budapest";
+    }
+
     if (window.mapMode === "touring") {
+
+        window.mapMode = "budapest";
         window.setBudapestMap();
+
+        btn.innerText = "Touring";
+
     } else {
+
+        window.mapMode = "touring";
         window.setTouringMap();
+
+        btn.innerText = "Budapest";
     }
 }
 
