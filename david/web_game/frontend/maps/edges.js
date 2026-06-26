@@ -1,5 +1,23 @@
 let edgeLayer = null;
 
+function haversine(lat1, lon1, lat2, lon2) {
+
+    const R = 6371; // km
+
+    const toRad = d => d * Math.PI / 180;
+
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+
+    const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(toRad(lat1)) *
+        Math.cos(toRad(lat2)) *
+        Math.sin(dLon / 2) ** 2;
+
+    return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 async function loadEdges() {
 
     if (!window.map) return;
@@ -54,6 +72,13 @@ async function loadEdges() {
         edgeLayer.addLayer(node);
 
         // connection: Budapest → District
+        const distance = haversine(
+            budapest.lat,
+            budapest.lon,
+            d.lat,
+            d.lon
+        );
+        
         const line = L.polyline(
             [
                 [budapest.lat, budapest.lon],
@@ -65,21 +90,36 @@ async function loadEdges() {
                 opacity: 0.5
             }
         );
-
+        
+        line.bindTooltip(
+            `${distance.toFixed(1)} km`,
+            {
+                sticky: true,
+                className: "edge-distance-tooltip"
+            }
+        );
+        
         line.on("mouseover", () => {
-            line.setStyle({ opacity: 0.9, weight: 5 });
+            line.setStyle({
+                opacity: 0.9,
+                weight: 5
+            });
+            line.openTooltip();
         });
-
+        
         line.on("mouseout", () => {
-            line.setStyle({ opacity: 0.5, weight: 3 });
+            line.setStyle({
+                opacity: 0.5,
+                weight: 3
+            });
+            line.closeTooltip();
         });
-
+        
         line.on("click", () => {
             console.log(`Budapest → District ${i}`);
         });
-
+        
         edgeLayer.addLayer(line);
     }
-
     edgeLayer.addTo(window.map);
 }

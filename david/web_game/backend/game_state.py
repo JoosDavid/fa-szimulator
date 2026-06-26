@@ -7,7 +7,7 @@ class GameState:
 
         self.elegedettseg = 1000
         self.szakertelem = 500
-        self.furgon = 200
+        self.furgon = 1000
 
     def next_turn(self):
 
