@@ -5,6 +5,7 @@ from fastapi.responses import FileResponse
 
 from shapely.geometry import Point
 import csv
+from backend.quiz import router as quiz_router
 
 from backend.game_state import GameState
 from backend.geo import DISTRICTS
@@ -32,10 +33,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(quiz_router)
 
-# -----------------------------
-# GAME STATE (REAL OBJECT)
-# -----------------------------
 game = GameState()
 
 

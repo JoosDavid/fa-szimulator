@@ -1,5 +1,5 @@
 import pygame
-from ui import *
+from ui import UIManager, SideBar, Button, ResourceBar, GameTime, TimeDisplay
 
 pygame.init()
 
