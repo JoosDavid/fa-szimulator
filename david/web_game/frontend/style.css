@@ -1,48 +1,76 @@
 body {
     margin: 0;
-    font-family: Arial;
+    font-family: Arial, sans-serif;
+    height: 100vh;
+    overflow: hidden;
 }
 
+/* MAIN LAYOUT */
 .layout {
     display: flex;
     height: 100vh;
+    width: 100vw;
 }
 
+/* SIDEBAR */
 .sidebar {
     width: 200px;
     background: #222;
     display: flex;
     flex-direction: column;
     padding: 10px;
+    box-sizing: border-box;
 }
 
 .sidebar button {
     margin: 5px 0;
     padding: 10px;
     cursor: pointer;
+    border: none;
+    background: #444;
+    color: white;
+    border-radius: 4px;
 }
 
+.sidebar button:hover {
+    background: #666;
+}
+
+/* MAIN PANEL */
 .main {
     flex: 1;
     display: flex;
     flex-direction: column;
+    height: 100vh;
 }
 
+/* TOP BAR */
 .topbar {
     height: 50px;
     background: #444;
     color: white;
-    padding: 10px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    box-sizing: border-box;
+    flex-shrink: 0;
 }
 
+/* MAP (CRITICAL FIX) */
 #map {
     flex: 1;
     width: 100%;
+    min-height: 0;   /* VERY IMPORTANT for Leaflet */
 }
 
+/* BOTTOM BAR */
 .resources {
     height: 50px;
     background: #333;
     color: white;
-    padding: 10px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    box-sizing: border-box;
+    flex-shrink: 0;
 }

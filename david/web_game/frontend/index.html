@@ -9,14 +9,39 @@
 
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+
+    <!-- IMPORTANT: ensure map has height -->
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        .layout {
+            display: flex;
+            height: 100vh;
+        }
+
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #map {
+            flex: 1;
+            min-height: 300px;   /* CRITICAL */
+            width: 100%;
+        }
+    </style>
 </head>
 
 <body>
 
 <div class="layout">
 
+    <!-- SIDEBAR -->
     <div class="sidebar">
-
         <button onclick="openProfile()">Profile</button>
         <button onclick="openMissions()">Missions</button>
 
@@ -25,30 +50,37 @@
         </button>
 
         <button onclick="endTurn()">End Turn</button>
-
     </div>
 
+    <!-- MAIN AREA -->
     <div class="main">
 
         <div class="topbar">
-            <div id="time"></div>
+            <div id="time">Loading...</div>
         </div>
 
-        <!-- IMPORTANT: ensure map has height in CSS -->
+        <!-- MAP (must exist before JS runs) -->
         <div id="map"></div>
 
+        <!-- RESOURCES -->
         <div class="resources">
-            <div id="resources"></div>
+            <div id="resources">Loading...</div>
         </div>
 
     </div>
 
 </div>
 
+<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-<script src="/static/app.js"></script>
+<!-- IMPORTANT: order matters -->
+<script src="/static/maps/districts.js"></script>
+<script src="/static/maps/edges.js"></script>
+<script src="/static/maps/trees.js"></script>
 <script src="/static/maps/touring.js"></script>
+
+<script src="/static/app.js"></script>
 
 </body>
 </html>

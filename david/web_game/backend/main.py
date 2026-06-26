@@ -1,25 +1,30 @@
 from fastapi import FastAPI
-from backend.game_state import GameState
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+
 from shapely.geometry import Point
-from backend.geo import get_random_district, DISTRICTS
 import csv
 from backend.quiz import router as quiz_router
 
+from backend.game_state import GameState
+from backend.geo import DISTRICTS
+
 app = FastAPI()
 
-app.mount(
-    "/static",
-    StaticFiles(directory="frontend"),
-    name="static"
-)
+# -----------------------------
+# STATIC FRONTEND
+# -----------------------------
+app.mount("/static", StaticFiles(directory="frontend"), name="static")
 
 @app.get("/")
 def home():
     return FileResponse("frontend/index.html")
 
+
+# -----------------------------
+# CORS
+# -----------------------------
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -45,48 +50,74 @@ def get_state():
 
 @app.post("/end_turn")
 def end_turn():
-
     game.next_turn()
-
-    return {
-        "time": game.get_time(),
-        "elegedettseg": game.elegedettseg,
-        "szakertelem": game.szakertelem,
-        "furgon": game.furgon
-    }
+    return get_state()
 
 
-# ----------------------------------
-# TREES FROM CSV
-# ----------------------------------
+# -----------------------------
+# TOURING STATE (SEPARATE FROM GAME)
+# -----------------------------
+CURRENT_DISTRICTS = None
 
-CURRENT_DISTRICT = None
 
 @app.get("/touring/start")
 def start_touring():
 
-    global CURRENT_DISTRICT
-    CURRENT_DISTRICT = get_random_district()
+    global CURRENT_DISTRICTS
+
+    # sample 10 districts
+    CURRENT_DISTRICTS = DISTRICTS.sample(10).copy()
+
+    # ensure correct CRS
+    CURRENT_DISTRICTS = CURRENT_DISTRICTS.to_crs(epsg=4326)
 
     return {
-        "name": str(CURRENT_DISTRICT.get("name", "unknown")),
-        "id": str(CURRENT_DISTRICT.name)
+        "count": len(CURRENT_DISTRICTS)
     }
+
+
+@app.get("/touring/districts")
+def get_districts():
+
+    global CURRENT_DISTRICTS
+
+    if CURRENT_DISTRICTS is None:
+        return {"type": "FeatureCollection", "features": []}
+
+    return {
+        "type": "FeatureCollection",
+        "features": CURRENT_DISTRICTS.__geo_interface__["features"]
+    }
+
+
+@app.get("/touring/centroids")
+def get_centroids():
+
+    global CURRENT_DISTRICTS
+
+    if CURRENT_DISTRICTS is None:
+        return []
+
+    return [
+        {
+            "lat": row.geometry.centroid.y,
+            "lon": row.geometry.centroid.x
+        }
+        for _, row in CURRENT_DISTRICTS.iterrows()
+    ]
+
 
 @app.get("/trees")
 def get_trees():
 
-    global CURRENT_DISTRICT
+    global CURRENT_DISTRICTS
 
-    if CURRENT_DISTRICT is None:
+    if CURRENT_DISTRICTS is None:
         return []
-
-    polygon = CURRENT_DISTRICT.geometry
 
     trees = []
 
     with open("backend/dendro_final.csv", newline="", encoding="utf-8") as f:
-
         reader = csv.DictReader(f)
 
         for row in reader:
@@ -94,17 +125,20 @@ def get_trees():
             try:
                 lat = float(row["lat"])
                 lon = float(row["lon"])
+                point = Point(lon, lat)
 
-                point = Point(lon, lat)  # IMPORTANT: lon, lat order
+                # check if inside ANY of the 10 sampled districts
+                for _, district in CURRENT_DISTRICTS.iterrows():
 
-                if polygon.contains(point):
+                    if district.geometry.contains(point):
 
-                    row["lat"] = lat
-                    row["lon"] = lon
-
-                    trees.append(row)
+                        trees.append({
+                            "lat": lat,
+                            "lon": lon
+                        })
+                        break
 
             except:
-                pass
+                continue
 
     return trees
