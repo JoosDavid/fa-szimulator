@@ -42,14 +42,17 @@
 
     <!-- SIDEBAR -->
     <div class="sidebar">
-        <button onclick="openProfile()">Profile</button>
-        <button onclick="openMissions()">Missions</button>
 
-        <button id="touringButton" onclick="toggleTouring()">
+        <button type="button" onclick="openProfile()">Profile</button>
+        <button type="button" onclick="openMissions()">Missions</button>
+        <button type="button" onclick="openQuiz()">Quiz</button>
+
+        <button type="button" id="touringButton" onclick="toggleTouring()">
             Touring
         </button>
 
-        <button onclick="endTurn()">End Turn</button>
+        <button type="button" onclick="endTurn()">End Turn</button>
+
     </div>
 
     <!-- MAIN AREA -->
@@ -71,7 +74,28 @@
 
 </div>
 
-<!-- Leaflet JS -->
+<!-- QUIZ PANEL -->
+<div id="quizPanel" class="side-panel hidden">
+    <button type="button" class="close-panel-button" onclick="closeQuiz()">×</button>
+
+    <h2>Quiz</h2>
+
+    <div id="quizMenu">
+        <button type="button" onclick="openLearning()">Tudás növesztés</button>
+        <button type="button" onclick="openQuizGame()">Móka</button>
+    </div>
+
+    <div id="learningView" class="hidden">
+        <h3>Nevezetes fák történetei</h3>
+        <div id="storiesList"></div>
+    </div>
+
+    <div id="quizView" class="hidden">
+        <h3>Quiz</h3>
+        <div id="quizQuestionBox"></div>
+    </div>
+</div>
+
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <!-- IMPORTANT: order matters -->
@@ -79,6 +103,7 @@
 <script src="/static/maps/edges.js"></script>
 <script src="/static/maps/trees.js"></script>
 <script src="/static/maps/touring.js"></script>
+<script src="/static/quiz.js"></script>
 
 <script src="/static/app.js"></script>
 
