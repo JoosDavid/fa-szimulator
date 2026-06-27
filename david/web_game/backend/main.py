@@ -21,7 +21,16 @@ from backend.geo import DISTRICTS
 from backend.missions import MissionManager
 
 
-TREES = pd.read_csv("backend/dendro_final.csv")
+# -----------------------------
+# PATHS (resolved relative to this file, not the working directory)
+# -----------------------------
+BASE_DIR = Path(__file__).resolve().parent
+FRONTEND_DIR = BASE_DIR.parent / "frontend"
+DATA_DIR = BASE_DIR / "data"
+BUDAPEST_TREE_SAMPLE_PATH = DATA_DIR / "budapest_trees_sample_10000.json"
+
+TREES = pd.read_csv(BASE_DIR / "dendro_final.csv")
+
 
 @lru_cache(maxsize=1)
 def load_budapest_tree_sample():
@@ -39,11 +48,11 @@ app = FastAPI()
 # -----------------------------
 # STATIC
 # -----------------------------
-app.mount("/static", StaticFiles(directory="frontend"), name="static")
+app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 
 @app.get("/")
 def home():
-    return FileResponse("frontend/index.html")
+    return FileResponse(FRONTEND_DIR / "index.html")
 
 # -----------------------------
 # CORS
@@ -239,10 +248,6 @@ def get_trees():
             continue
 
     return trees
-
-DATA_DIR = Path(__file__).resolve().parent / "data"
-BUDAPEST_TREE_SAMPLE_PATH = DATA_DIR / "budapest_trees_sample_10000.json"
-
 
 @app.get("/trees/budapest")
 def get_budapest_trees():

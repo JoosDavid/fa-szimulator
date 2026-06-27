@@ -1,6 +1,10 @@
+from pathlib import Path
+
 import geopandas as gpd
 
-DISTRICTS = gpd.read_file("backend/hungary_level7.shp")
+BASE_DIR = Path(__file__).resolve().parent
+
+DISTRICTS = gpd.read_file(BASE_DIR / "hungary_level7.shp")
 DISTRICTS = DISTRICTS.to_crs(epsg=4326)
 
 DISTRICTS = DISTRICTS.reset_index(drop=True)
