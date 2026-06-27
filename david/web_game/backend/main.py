@@ -124,7 +124,6 @@ def quiz_start():
     }
 
 @app.post("/quiz/correct")
-@app.post("/quiz/correct")
 def quiz_correct():
     rewarded = game.reward_quiz_correct_answer()
 
@@ -314,10 +313,3 @@ def move(req: MoveRequest):
         "player_lon": game.player_lon,
         "cost": cost
     }
-
-app.include_router(
-    mission_manager.create_router(
-        game=game,
-        get_state=get_state,
-    )
-)
