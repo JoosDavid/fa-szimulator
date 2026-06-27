@@ -1,0 +1,74 @@
+import csv
+import json
+import random
+from pathlib import Path
+
+SAMPLE_SIZE = 10_000
+RANDOM_SEED = 42
+
+BASE_DIR = Path(__file__).resolve().parent
+RAW_CSV = BASE_DIR / "data" / "budapest_trees_full.csv"
+OUT_JSON = BASE_DIR / "data" / "budapest_trees_sample_10000.json"
+
+
+def valid_budapest_coord(lat: float, lon: float) -> bool:
+    # Loose Budapest-area filter, also removes broken coordinates.
+    return 47.25 <= lat <= 47.75 and 18.75 <= lon <= 19.40
+
+
+def main():
+    random.seed(RANDOM_SEED)
+
+    sample = []
+    valid_seen = 0
+
+    with RAW_CSV.open("r", encoding="utf-8-sig", newline="") as f:
+        reader = csv.DictReader(f)
+
+        for row in reader:
+            try:
+                lat = float(row["lat"])
+                lon = float(row["lon"])
+            except (KeyError, TypeError, ValueError):
+                continue
+
+            if not valid_budapest_coord(lat, lon):
+                continue
+
+            tree = {
+                "id": row.get("supplyId") or row.get("id") or "",
+                "lat": round(lat, 7),
+                "lon": round(lon, 7),
+                "hungarian_name": (
+                    row.get("hungarian_name")
+                    or row.get("selected_category_hungarian")
+                    or "Ismeretlen fa"
+                ),
+                "latin_name": (
+                    row.get("latin_name")
+                    or row.get("selected_category_latin")
+                    or ""
+                ),
+            }
+
+            valid_seen += 1
+
+            # Reservoir sampling: memory-friendly even if later you have much more data.
+            if len(sample) < SAMPLE_SIZE:
+                sample.append(tree)
+            else:
+                j = random.randint(0, valid_seen - 1)
+                if j < SAMPLE_SIZE:
+                    sample[j] = tree
+
+    OUT_JSON.parent.mkdir(parents=True, exist_ok=True)
+
+    with OUT_JSON.open("w", encoding="utf-8") as f:
+        json.dump(sample, f, ensure_ascii=False, separators=(",", ":"))
+
+    print(f"Saved {len(sample)} trees to {OUT_JSON}")
+    print(f"Valid trees seen: {valid_seen}")
+
+
+if __name__ == "__main__":
+    main()

@@ -42,8 +42,6 @@ async function loadStories() {
         const card = document.createElement("div");
         card.className = "story-card";
         card.innerHTML = `
-            <h4>${story.hungarian}</h4>
-            <em>${story.latin}</em>
             <p><strong>${story.story_title}</strong></p>
             <details>
                 <summary>Elolvasom</summary>

@@ -9,3 +9,5 @@ pyproj
 fiona
 
 python-multipart
+
+shapely
