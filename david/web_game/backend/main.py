@@ -159,14 +159,14 @@ def start_touring():
             "state": get_state(),
         }
 
-    CURRENT_DISTRICTS = DISTRICTS.sample(6).copy()
-    CURRENT_DISTRICTS = CURRENT_DISTRICTS.to_crs(epsg=4326)
+    game.current_districts = DISTRICTS.sample(6).to_crs(epsg=4326).copy()
+    game.visited_districts = set()
 
     game.reset_touring()
 
     return {
         "success": True,
-        "count": len(CURRENT_DISTRICTS),
+        "count": len(game.current_districts),
         "state": get_state(),
     }
 
@@ -299,12 +299,13 @@ def move(req: MoveRequest):
 
     game.move_player(req.lat, req.lon, cost)
 
-    point = Point(req.lon, req.lat)
+    if game.current_districts is not None:
+        point = Point(req.lon, req.lat)
 
-    for _, district in game.current_districts.iterrows():
-        if district.geometry.contains(point):
-            game.visited_districts.add(district["district_id"])
-            break
+        for _, district in game.current_districts.iterrows():
+            if district.geometry.contains(point):
+                game.visited_districts.add(district["district_id"])
+                break
 
     return {
         "success": True,
