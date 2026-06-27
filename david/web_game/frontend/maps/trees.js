@@ -4,40 +4,24 @@ const treeIcon = L.icon({
     iconAnchor: [10, 10]
 });
 
-/* ---------------- TREES ---------------- */
-
 async function loadTrees() {
 
-    if (!window.map) {
-        console.warn("Trees: map not ready");
-        return;
+    const s = window.mapState;
+    if (!s.map) return;
+
+    const res = await fetch("/trees");
+    const data = await res.json();
+
+    if (s.treeLayer) {
+        s.map.removeLayer(s.treeLayer);
     }
 
-    try {
-        const res = await fetch("/trees");
-        const data = await res.json();
+    const markers = data.map(p =>
+        L.marker([p.lat, p.lon], {
+            icon: treeIcon,
+            pane: "treesPane"
+        })
+    );
 
-        // remove old layer safely
-        if (treeLayer) {
-            window.map.removeLayer(treeLayer);
-            treeLayer = null;
-        }
-
-        const markers = [];
-
-        for (const p of data) {
-
-            const marker = L.marker([p.lat, p.lon], {
-                icon: treeIcon
-            });
-
-            markers.push(marker);
-        }
-
-        treeLayer = L.layerGroup(markers);
-        treeLayer.addTo(window.map);
-
-    } catch (err) {
-        console.error("Failed to load trees:", err);
-    }
+    s.treeLayer = L.layerGroup(markers).addTo(s.map);
 }

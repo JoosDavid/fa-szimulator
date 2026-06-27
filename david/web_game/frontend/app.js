@@ -1,15 +1,22 @@
-async function loadState() {
+window.renderState = function (data) {
 
+    console.log("renderState:", data);
+
+    document.getElementById("time").innerText =
+        data.time ?? "NO TIME";
+
+    document.getElementById("resources").innerText =
+        `Elégedettség: ${data.elegedettseg} | ` +
+        `Szakértelem: ${data.szakertelem} | ` +
+        `Furgon: ${data.furgon}`;
+};
+
+async function loadState() {
     try {
         const res = await fetch("/state");
         const data = await res.json();
 
-        document.getElementById("time").innerText = data.time;
-
-        document.getElementById("resources").innerText =
-            `Elégedettség: ${data.elegedettseg} | ` +
-            `Szakértelem: ${data.szakertelem} | ` +
-            `Furgon: ${data.furgon}`;
+        window.renderState(data);
 
     } catch (err) {
         console.error("Failed to load state:", err);
@@ -17,20 +24,11 @@ async function loadState() {
 }
 
 async function endTurn() {
-
     try {
-        const res = await fetch("/end_turn", {
-            method: "POST"
-        });
-
+        const res = await fetch("/end_turn");
         const data = await res.json();
 
-        document.getElementById("time").innerText = data.time;
-
-        document.getElementById("resources").innerText =
-            `Elégedettség: ${data.elegedettseg} | ` +
-            `Szakértelem: ${data.szakertelem} | ` +
-            `Furgon: ${data.furgon}`;
+        window.renderState(data);
 
     } catch (err) {
         console.error("End turn failed:", err);
@@ -53,7 +51,6 @@ function toggleTouring() {
 
     const btn = document.getElementById("touringButton");
 
-    // safety fallback
     if (!window.mapMode) window.mapMode = "budapest";
 
     if (window.mapMode === "touring") {
@@ -65,14 +62,8 @@ function toggleTouring() {
     }
 }
 /* ---------------- INIT ---------------- */
-window.addEventListener("load", () => {
 
-    loadState();
-
-    // IMPORTANT:
-    // DO NOT create map here anymore.
-    // touring.js handles map creation.
-
-    // only ensure default state
+window.addEventListener("load", async () => {
+    await loadState();
     window.mapMode = "budapest";
 });
