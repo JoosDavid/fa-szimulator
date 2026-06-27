@@ -22,6 +22,9 @@ class GameState:
         self.budapest_lat = 47.4979
         self.budapest_lon = 19.0402
 
+        self.visited_districts = set()
+        self.current_districts = None
+
     def update_touring_unlock(self):
         if self.elegedettseg >= self.touring_goal:
             self.touring_unlocked = True

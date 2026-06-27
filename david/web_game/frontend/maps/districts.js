@@ -4,7 +4,10 @@ async function loadDistricts() {
     if (!s.map) return;
 
     const res = await fetch("/touring/districts");
-    const geojson = await res.json();
+    const data = await res.json();
+
+    const geojson = data.geojson;
+    const visited = data.visited;
 
     if (s.districtLayer) {
         s.map.removeLayer(s.districtLayer);
@@ -12,11 +15,16 @@ async function loadDistricts() {
 
     s.districtLayer = L.geoJSON(geojson, {
 
-        style: {
-            color: "#1d6cff",
-            weight: 2,
-            fillColor: "#1d6cff",
-            fillOpacity: 0.25
+        style: feature => {
+
+            const isVisited = visited.includes(feature.properties.district_id);
+                
+            return {
+                color: isVisited ? "#2e8b57" : "#1d6cff",
+                fillColor: isVisited ? "#2e8b57" : "#1d6cff",
+                fillOpacity: isVisited ? 0.5 : 0.25,
+                weight: 2
+            };
         },
 
         onEachFeature: (feature, layer) => {
