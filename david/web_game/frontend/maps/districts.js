@@ -1,15 +1,16 @@
 async function loadDistricts() {
 
-    if (!window.map) return;
+    const s = window.mapState;
+    if (!s.map) return;
 
     const res = await fetch("/touring/districts");
     const geojson = await res.json();
 
-    if (districtLayer) {
-        window.map.removeLayer(districtLayer);
+    if (s.districtLayer) {
+        s.map.removeLayer(s.districtLayer);
     }
 
-    districtLayer = L.geoJSON(geojson, {
+    s.districtLayer = L.geoJSON(geojson, {
 
         style: {
             color: "#1d6cff",
@@ -18,9 +19,8 @@ async function loadDistricts() {
             fillOpacity: 0.25
         },
 
-        onEachFeature: function (feature, layer) {
+        onEachFeature: (feature, layer) => {
 
-            // 🟦 HOVER EFFECT
             layer.on("mouseover", () => {
                 layer.setStyle({
                     fillOpacity: 0.45,
@@ -29,28 +29,21 @@ async function loadDistricts() {
             });
 
             layer.on("mouseout", () => {
-                layer.setStyle({
-                    fillOpacity: 0.25,
-                    weight: 2
-                });
+                s.districtLayer.resetStyle(layer);
             });
 
-            layer.on("click", () => {
+            layer.on("click", async () => {
 
                 const center = layer.getBounds().getCenter();
-                        
-                if (window.setPlayerPosition) {
-                    window.setPlayerPosition(center.lat, center.lng);
+
+                await window.teleport(center.lat, center.lng);
+
+                if (s.selectedDistrict) {
+                    s.districtLayer.resetStyle(s.selectedDistrict);
                 }
-            
-                // reset previous selection
-                if (selectedDistrict) {
-                    districtLayer.resetStyle(selectedDistrict);
-                }
-            
-                // set new selection
-                selectedDistrict = layer;
-            
+
+                s.selectedDistrict = layer;
+
                 layer.setStyle({
                     fillOpacity: 0.6,
                     color: "#00ffcc",
@@ -59,5 +52,5 @@ async function loadDistricts() {
             });
         }
 
-    }).addTo(window.map);
+    }).addTo(s.map);
 }
