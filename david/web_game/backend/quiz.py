@@ -10,7 +10,7 @@ router = APIRouter(prefix="/quiz", tags=["quiz"])
 DATA_DIR = Path(__file__).parent / "data"
 
 STORIES_PATH = DATA_DIR / "notable_tree_stories_TEST_5.jsonl"
-QUIZ_PATH = DATA_DIR / "quiz_questions_manual_TEST_5.jsonl"
+QUIZ_PATH = DATA_DIR / "quiz_questions_manual_full.jsonl"
 
 
 def read_jsonl(path: Path):

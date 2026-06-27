@@ -3,6 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
+import json
+
+from functools import lru_cache
+from pathlib import Path
+from fastapi import HTTPException
+
 from shapely.geometry import Point
 import csv
 from backend.quiz import router as quiz_router
@@ -146,7 +152,27 @@ def get_trees():
                         })
                         break
 
-            except:
-                continue
+            except Exception as e:
+                print("Error:", e)
 
     return trees
+
+DATA_DIR = Path(__file__).resolve().parent / "data"
+BUDAPEST_TREE_SAMPLE_PATH = DATA_DIR / "budapest_trees_sample_10000.json"
+
+
+@lru_cache(maxsize=1)
+def load_budapest_tree_sample():
+    if not BUDAPEST_TREE_SAMPLE_PATH.exists():
+        raise HTTPException(
+            status_code=404,
+            detail="Missing budapest_trees_sample_10000.json. Run backend/create_budapest_tree_sample.py first.",
+        )
+
+    with BUDAPEST_TREE_SAMPLE_PATH.open("r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+@app.get("/trees/budapest")
+def get_budapest_trees():
+    return load_budapest_tree_sample()

@@ -65,14 +65,18 @@ function toggleTouring() {
     }
 }
 /* ---------------- INIT ---------------- */
-window.addEventListener("load", () => {
+window.addEventListener("load", async () => {
+    await loadState();
 
-    loadState();
+    // Start the game in Budapest mode
+    if (typeof window.setBudapestMap === "function") {
+        await window.setBudapestMap();
 
-    // IMPORTANT:
-    // DO NOT create map here anymore.
-    // touring.js handles map creation.
-
-    // only ensure default state
-    window.mapMode = "budapest";
+        const btn = document.getElementById("touringButton");
+        if (btn) {
+            btn.innerText = "Touring";
+        }
+    } else {
+        console.error("setBudapestMap is not defined. Check script order in index.html.");
+    }
 });

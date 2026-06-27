@@ -95,16 +95,25 @@
     </div>
 </div>
 
+<!-- Leaflet JS must be before your map scripts -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-<!-- IMPORTANT: order matters -->
+<!-- General game logic / map dependencies -->
 <script src="/static/maps/districts.js"></script>
 <script src="/static/maps/edges.js"></script>
 <script src="/static/maps/trees.js"></script>
-<script src="/static/maps/touring.js"></script>
-<script src="/static/quiz.js"></script>
 
-<script src="/static/app.js"></script>
+<!-- Touring code stays untouched -->
+<script src="/static/maps/touring.js"></script>
+
+<!-- Budapest code comes AFTER touring.js -->
+<script src="/static/maps/budapest.js?v=1"></script>
+
+<!-- App init should come AFTER map scripts -->
+<script src="/static/app.js?v=1"></script>
+
+<!-- Other UI scripts -->
+<script src="/static/quiz.js"></script>
 
 </body>
 </html>
