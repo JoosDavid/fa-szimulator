@@ -51,9 +51,9 @@ function toggleTouring() {
 
     const btn = document.getElementById("touringButton");
 
-    if (!window.mapMode) window.mapMode = "budapest";
+    if (!window.window.mapState.mode) window.window.mapState.mode = "budapest";
 
-    if (window.mapMode === "touring") {
+    if (window.window.mapState.mode === "touring") {
         window.setBudapestMap();
         btn.innerText = "Touring";
     } else {

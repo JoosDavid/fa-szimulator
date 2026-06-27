@@ -100,24 +100,19 @@
 
 <script src="/static/mapState.js"></script>
 
-<script src="/static/maps/player.js"></script>
-<script src="/static/maps/teleport.js"></script>
+<!-- MUST BE FIRST ENGINE -->
+<script src="/static/maps/mapEngine.js"></script>
 
+<!-- game systems -->
+<script src="/static/maps/player.js"></script>
 <script src="/static/maps/districts.js"></script>
 <script src="/static/maps/edges.js"></script>
 <script src="/static/maps/trees.js"></script>
 
-<!-- Touring code stays untouched -->
-
+<!-- modes -->
 <script src="/static/maps/touring.js"></script>
-
-<!-- Budapest code comes AFTER touring.js -->
 <script src="/static/maps/budapest.js?v=1"></script>
 
-<!-- App init should come AFTER map scripts -->
+<!-- UI -->
 <script src="/static/app.js?v=1"></script>
-
-<!-- Other UI scripts -->
-
 <script src="/static/quiz.js"></script>
-<script src="/static/app.js"></script>

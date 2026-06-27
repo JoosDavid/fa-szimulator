@@ -36,7 +36,7 @@ async function loadDistricts() {
 
                 const center = layer.getBounds().getCenter();
 
-                await window.teleport(center.lat, center.lng);
+                await window.requestMove(center.lat, center.lng);
 
                 if (s.selectedDistrict) {
                     s.districtLayer.resetStyle(s.selectedDistrict);

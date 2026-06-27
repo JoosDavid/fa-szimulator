@@ -1,78 +1,69 @@
 // touring.js
 
-const BUDAPEST_BOUNDS = [
-    [47.35, 18.85],
-    [47.62, 19.40]
-];
-
 const HUNGARY_BOUNDS = [
     [45.74, 16.11],
     [48.58, 22.90]
 ];
 
-/* ---------------- MAP CORE ---------------- */
+/* ---------------- TOURING MODE ---------------- */
 
-function createMap(center, zoom, bounds) {
-
-    const s = window.mapState;
-
-    if (s.map) {
-        s.map.remove();
-    }
-
-    const container = document.getElementById("map");
-    if (!container) return;
-
-    s.map = L.map(container, {
-        inertia: true,
-        zoomAnimation: true,
-        fadeAnimation: true,
-        maxBounds: bounds,
-        maxBoundsViscosity: 1.0,
-        minZoom: zoom,
-        maxZoom: 18
-    }).setView(center, zoom);
-
-    s.map.createPane("treesPane");
-    s.map.getPane("treesPane").style.zIndex = 400;
-
-    s.map.createPane("playerPane");
-    s.map.getPane("playerPane").style.zIndex = 650;
-
-    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "© OpenStreetMap"
-    }).addTo(s.map);
-}
-
-/* ---------------- BUDAPEST MODE ---------------- */
-
-window.setBudapestMap = async function () {
+window.setTouringMap = async function () {
 
     const s = window.mapState;
-    s.mode = "budapest";
+    s.mode = "touring";
 
     clearAllLayers();
-    createMap([47.4979, 19.0402], 12, BUDAPEST_BOUNDS);
 
-    await fetch("/reset");
+    // 1. Create map (OWNED by mapEngine.js)
+    window.createMap(
+        [47.1625, 19.5033],
+        7,
+        HUNGARY_BOUNDS
+    );
 
-    // REMOVE PLAYER explicitly
-    if (s.playerMarker) {
-        s.map.removeLayer(s.playerMarker);
-        s.playerMarker = null;
-    }
+    // 2. Backend init
+    await fetch("/touring/start");
+
+    // 3. Render world
+    await loadTouringWorld();
+
+    // 4. Sync player
+    await syncPlayer();
 };
 
-/* ---------------- TOURING MODE (MISSING PIECE FIXED) ---------------- */
+/* ---------------- WORLD LOADING ---------------- */
+
+async function loadTouringWorld() {
+
+    await loadDistricts();
+    await loadEdges();
+    await loadTrees();
+    await loadTouringNodes();
+}
+
+/* ---------------- PLAYER SYNC ---------------- */
+
+async function syncPlayer() {
+
+    const player = await fetch("/state").then(r => r.json());
+
+    renderState(player);
+
+    if (player?.player_lat != null) {
+        window.initPlayer(player.player_lat, player.player_lon);
+    }
+}
+
+/* ---------------- TOURING NODES ---------------- */
 
 async function loadTouringNodes() {
 
     const s = window.mapState;
     if (!s.map || s.mode !== "touring") return;
 
+    // Budapest node
     const bud = await fetch("/touring/budapest").then(r => r.json());
 
-    // Budapest node (yellow)
     const budMarker = L.circleMarker([bud.lat, bud.lon], {
         radius: 10,
         color: "#ffcc00",
@@ -81,13 +72,13 @@ async function loadTouringNodes() {
     }).addTo(s.map);
 
     budMarker.on("click", () => {
-        window.teleport(bud.lat, bud.lon);
+        window.requestMove(bud.lat, bud.lon);
     });
 
-    // district centroids
+    // District nodes
     const points = await fetch("/touring/centroids").then(r => r.json());
 
-    points.forEach((p, i) => {
+    points.forEach((p) => {
 
         const marker = L.circleMarker([p.lat, p.lon], {
             radius: 6,
@@ -97,36 +88,12 @@ async function loadTouringNodes() {
         }).addTo(s.map);
 
         marker.on("click", () => {
-            window.teleport(p.lat, p.lon);
+            window.requestMove(p.lat, p.lon);
         });
     });
 }
 
-window.setTouringMap = async function () {
-
-    const s = window.mapState;
-    s.mode = "touring";
-
-    clearAllLayers();
-
-    createMap([47.1625, 19.5033], 7, HUNGARY_BOUNDS);
-
-    await fetch("/touring/start");
-
-    await loadDistricts();
-    await loadEdges();
-    await loadTrees();
-    await loadTouringNodes();
-
-    const player = await fetch("/state").then(r => r.json());
-
-    renderState(player);
-    if (player?.player_lat != null) {
-        window.initPlayer(player.player_lat, player.player_lon);
-    }
-};
-
-/* ---------------- CLEAR ---------------- */
+/* ---------------- CLEANUP ---------------- */
 
 function clearAllLayers() {
 
@@ -147,5 +114,5 @@ function clearAllLayers() {
     s.treeLayer = null;
 }
 
-/* ---------------- EXPORT ---------------- */
-window.createMap = createMap;
+/* ---------------- EXPORT (optional debug hook) ---------------- */
+window.clearTouringLayers = clearAllLayers;

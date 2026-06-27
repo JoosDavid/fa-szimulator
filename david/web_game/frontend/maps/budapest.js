@@ -15,7 +15,7 @@ function escapeHtml(value) {
 }
 
 async function loadBudapestTrees() {
-    if (!window.map) {
+    if (!window.mapState.map) {
         console.warn("Budapest trees: map not ready");
         return;
     }
@@ -31,7 +31,7 @@ async function loadBudapestTrees() {
         const trees = await res.json();
 
         if (window.budapestTreeLayer) {
-            window.map.removeLayer(window.budapestTreeLayer);
+            window.mapState.map.removeLayer(window.budapestTreeLayer);
             window.budapestTreeLayer = null;
         }
 
@@ -60,7 +60,7 @@ async function loadBudapestTrees() {
         }
 
         window.budapestTreeLayer = L.layerGroup(markers);
-        window.budapestTreeLayer.addTo(window.map);
+        window.budapestTreeLayer.addTo(window.mapState.map);
 
         console.log(`Loaded ${trees.length} Budapest trees`);
 
@@ -74,7 +74,7 @@ async function loadBudapestTrees() {
     touring.js stays unchanged.
 */
 window.setBudapestMap = async function () {
-    window.mapMode = "budapest";
+    window.mapState.mode = "budapest";
 
     createMap([47.4979, 19.0402], 12);
 

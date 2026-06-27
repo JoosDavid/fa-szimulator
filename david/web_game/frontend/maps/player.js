@@ -19,30 +19,23 @@ window.initPlayer = function (lat, lon) {
     }).addTo(s.map);
 };
 
-window.teleport = async function (lat, lon) {
-
-    if (window.mapState.mode !== "touring") {
-        console.log("Teleport disabled in budapest mode");
-        return;
-    }
-
+window.requestMove = async function (lat, lon) {
     const res = await fetch("/move", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {"Content-Type": "application/json"},
         body: JSON.stringify({ lat, lon })
     });
 
     const data = await res.json();
 
-    if (!data.success) {
-        alert("Not enough furgon!");
-        return;
-    }
+    if (!data.success) return;
 
-    window.mapState.playerMarker.setLatLng([
-        data.player_lat,
-        data.player_lon
-    ]);
+    if (window.mapState.playerMarker) {
+        window.mapState.playerMarker.setLatLng([
+            data.player_lat,
+            data.player_lon
+        ]);
+    }
 
     window.renderState(data);
 };

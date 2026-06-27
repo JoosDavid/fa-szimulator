@@ -13,10 +13,13 @@ from shapely.geometry import Point
 from pydantic import BaseModel
 import csv
 import math
+import pandas as pd
 
 from backend.quiz import router as quiz_router
 from backend.game_state import GameState
 from backend.geo import DISTRICTS
+
+TREES = pd.read_csv("backend/dendro_final.csv")
 
 app = FastAPI()
 
@@ -143,22 +146,18 @@ def get_trees():
 
     trees = []
 
-    with open("backend/dendro_final.csv", newline="", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
+    for _, row in TREES.iterrows():
+        try:
+            lat = float(row["lat"])
+            lon = float(row["lon"])
+            point = Point(lon, lat)
 
-        for row in reader:
-            try:
-                lat = float(row["lat"])
-                lon = float(row["lon"])
-                point = Point(lon, lat)
-
-                for _, district in CURRENT_DISTRICTS.iterrows():
-                    if district.geometry.contains(point):
-                        trees.append({"lat": lat, "lon": lon})
-                        break
-
-            except Exception as e:
-                print("Error:", e)
+            for _, district in CURRENT_DISTRICTS.iterrows():
+                if district.geometry.contains(point):
+                    trees.append({"lat": lat, "lon": lon})
+                    break
+        except:
+            continue
 
     return trees
 
