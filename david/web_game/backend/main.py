@@ -257,6 +257,8 @@ def get_budapest_trees():
 # -----------------------------
 # DISTANCE FUNCTION
 # -----------------------------
+# Note: an intentional twin of this lives in frontend/maps/edges.js, used there
+# only to label edge tooltips. The backend value is the authoritative move cost.
 def haversine(lat1, lon1, lat2, lon2):
     R = 6371
 
