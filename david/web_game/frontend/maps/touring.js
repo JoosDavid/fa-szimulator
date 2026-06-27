@@ -54,6 +54,15 @@ async function syncPlayer() {
     }
 }
 
+window.refreshTouringMap = async function () {
+
+    if (window.mapState.mode !== "touring") {
+        return;
+    }
+
+    await loadDistricts();
+};
+
 /* ---------------- TOURING NODES ---------------- */
 
 async function loadTouringNodes() {

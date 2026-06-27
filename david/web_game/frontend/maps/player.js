@@ -38,4 +38,5 @@ window.requestMove = async function (lat, lon) {
     }
 
     window.renderState(data);
+    await window.refreshTouringMap();
 };

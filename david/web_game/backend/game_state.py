@@ -9,12 +9,15 @@ class GameState:
         self.szakertelem = 500
         self.furgon = 1000
 
-        # PLAYER POSITION
         self.player_lat = 47.4979
         self.player_lon = 19.0402
 
         self.budapest_lat = 47.4979
         self.budapest_lon = 19.0402
+
+        self.visited_districts = set()
+
+        self.current_districts = None
 
     def reset_touring(self):
         self.furgon = 1000

@@ -86,27 +86,46 @@ def reset():
 # -----------------------------
 # TOURING
 # -----------------------------
-CURRENT_DISTRICTS = None
 
 @app.get("/touring/start")
 def start_touring():
-    global CURRENT_DISTRICTS
 
-    CURRENT_DISTRICTS = DISTRICTS.sample(6).copy()
-    CURRENT_DISTRICTS = CURRENT_DISTRICTS.to_crs(epsg=4326)
+    available = DISTRICTS[
+        ~DISTRICTS["district_id"].isin(game.visited_districts)
+    ]
+
+    if available.empty:
+        game.current_districts = None
+        game.reset_touring()
+        return {
+            "finished": True,
+            "count": 0
+        }
+
+    game.current_districts = available.sample(6).copy()
+    game.current_districts = game.current_districts.to_crs(epsg=4326)
 
     game.reset_touring()
 
-    return {"count": len(CURRENT_DISTRICTS)}
+    return {"count": len(game.current_districts)}
 
 @app.get("/touring/districts")
 def get_districts():
-    if CURRENT_DISTRICTS is None:
-        return {"type": "FeatureCollection", "features": []}
+    if game.current_districts is None:
+        return {
+            "geojson": {
+                "type": "FeatureCollection",
+                "features": []
+            },
+            "visited": list(game.visited_districts)
+        }
 
     return {
-        "type": "FeatureCollection",
-        "features": CURRENT_DISTRICTS.__geo_interface__["features"]
+        "geojson": {
+            "type": "FeatureCollection",
+            "features": game.current_districts.__geo_interface__["features"]
+        },
+        "visited": list(game.visited_districts)
     }
 
 @app.get("/touring/budapest")
@@ -115,7 +134,7 @@ def get_budapest():
 
 @app.get("/touring/centroids")
 def get_centroids():
-    if CURRENT_DISTRICTS is None:
+    if game.current_districts is None:
         return []
 
     points = [
@@ -124,7 +143,7 @@ def get_centroids():
             "lat": row.geometry.centroid.y,
             "lon": row.geometry.centroid.x
         }
-        for i, (_, row) in enumerate(CURRENT_DISTRICTS.iterrows())
+        for i, (_, row) in enumerate(game.current_districts.iterrows())
     ]
 
     # ADD BUDAPEST AS A NODE
@@ -141,7 +160,7 @@ def get_centroids():
 # -----------------------------
 @app.get("/trees")
 def get_trees():
-    if CURRENT_DISTRICTS is None:
+    if game.current_districts is None:
         return []
 
     trees = []
@@ -152,7 +171,7 @@ def get_trees():
             lon = float(row["lon"])
             point = Point(lon, lat)
 
-            for _, district in CURRENT_DISTRICTS.iterrows():
+            for _, district in game.current_districts.iterrows():
                 if district.geometry.contains(point):
                     trees.append({"lat": lat, "lon": lon})
                     break
@@ -229,6 +248,13 @@ def move(req: MoveRequest):
         }
 
     game.move_player(req.lat, req.lon, cost)
+
+    point = Point(req.lon, req.lat)
+
+    for _, district in game.current_districts.iterrows():
+        if district.geometry.contains(point):
+            game.visited_districts.add(district["district_id"])
+            break
 
     return {
         "success": True,
