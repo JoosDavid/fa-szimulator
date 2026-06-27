@@ -163,4 +163,16 @@ body {
 
 .quiz-option:hover {
     background: #e8f2e8;
+.edge-distance-tooltip {
+
+    background: rgba(30, 30, 30, 0.9);
+    color: white;
+
+    border: 1px solid #4aa3ff;
+    border-radius: 6px;
+
+    padding: 4px 8px;
+
+    font-size: 13px;
+    font-weight: bold;
 }

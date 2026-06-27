@@ -98,12 +98,17 @@
 <!-- Leaflet JS must be before your map scripts -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-<!-- General game logic / map dependencies -->
+<script src="/static/mapState.js"></script>
+
+<script src="/static/maps/player.js"></script>
+<script src="/static/maps/teleport.js"></script>
+
 <script src="/static/maps/districts.js"></script>
 <script src="/static/maps/edges.js"></script>
 <script src="/static/maps/trees.js"></script>
 
 <!-- Touring code stays untouched -->
+
 <script src="/static/maps/touring.js"></script>
 
 <!-- Budapest code comes AFTER touring.js -->
@@ -113,7 +118,6 @@
 <script src="/static/app.js?v=1"></script>
 
 <!-- Other UI scripts -->
-<script src="/static/quiz.js"></script>
 
-</body>
-</html>
+<script src="/static/quiz.js"></script>
+<script src="/static/app.js"></script>

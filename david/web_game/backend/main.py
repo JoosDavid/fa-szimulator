@@ -10,23 +10,24 @@ from pathlib import Path
 from fastapi import HTTPException
 
 from shapely.geometry import Point
+from pydantic import BaseModel
 import csv
-from backend.quiz import router as quiz_router
+import math
 
+from backend.quiz import router as quiz_router
 from backend.game_state import GameState
 from backend.geo import DISTRICTS
 
 app = FastAPI()
 
 # -----------------------------
-# STATIC FRONTEND
+# STATIC
 # -----------------------------
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
 
 @app.get("/")
 def home():
     return FileResponse("frontend/index.html")
-
 
 # -----------------------------
 # CORS
@@ -43,17 +44,23 @@ app.include_router(quiz_router)
 
 game = GameState()
 
-
+# -----------------------------
+# STATE
+# -----------------------------
 @app.get("/state")
 def get_state():
     return {
         "time": game.get_time(),
         "elegedettseg": game.elegedettseg,
         "szakertelem": game.szakertelem,
-        "furgon": game.furgon
+        "furgon": game.furgon,
+        "player_lat": game.player_lat,
+        "player_lon": game.player_lon
     }
 
-
+# -----------------------------
+# TIME
+# -----------------------------
 @app.post("/end_turn")
 def end_turn():
     game.next_turn()
@@ -68,33 +75,29 @@ def quiz_correct():
         "szakertelem": game.szakertelem,
         "furgon": game.furgon
     }
+@app.post("/reset")
+def reset():
+    game.reset_touring()
+    return get_state()
+
 # -----------------------------
-# TOURING STATE (SEPARATE FROM GAME)
+# TOURING
 # -----------------------------
 CURRENT_DISTRICTS = None
 
-
 @app.get("/touring/start")
 def start_touring():
-
     global CURRENT_DISTRICTS
 
-    # sample 10 districts
-    CURRENT_DISTRICTS = DISTRICTS.sample(10).copy()
-
-    # ensure correct CRS
+    CURRENT_DISTRICTS = DISTRICTS.sample(6).copy()
     CURRENT_DISTRICTS = CURRENT_DISTRICTS.to_crs(epsg=4326)
 
-    return {
-        "count": len(CURRENT_DISTRICTS)
-    }
+    game.reset_touring()
 
+    return {"count": len(CURRENT_DISTRICTS)}
 
 @app.get("/touring/districts")
 def get_districts():
-
-    global CURRENT_DISTRICTS
-
     if CURRENT_DISTRICTS is None:
         return {"type": "FeatureCollection", "features": []}
 
@@ -103,29 +106,38 @@ def get_districts():
         "features": CURRENT_DISTRICTS.__geo_interface__["features"]
     }
 
+@app.get("/touring/budapest")
+def get_budapest():
+    return {"lat": 47.4979, "lon": 19.0402}
 
 @app.get("/touring/centroids")
 def get_centroids():
-
-    global CURRENT_DISTRICTS
-
     if CURRENT_DISTRICTS is None:
         return []
 
-    return [
+    points = [
         {
+            "name": f"District {i}",
             "lat": row.geometry.centroid.y,
             "lon": row.geometry.centroid.x
         }
-        for _, row in CURRENT_DISTRICTS.iterrows()
+        for i, (_, row) in enumerate(CURRENT_DISTRICTS.iterrows())
     ]
 
+    # ADD BUDAPEST AS A NODE
+    points.append({
+        "name": "Budapest",
+        "lat": 47.4979,
+        "lon": 19.0402
+    })
 
+    return points
+
+# -----------------------------
+# TREES
+# -----------------------------
 @app.get("/trees")
 def get_trees():
-
-    global CURRENT_DISTRICTS
-
     if CURRENT_DISTRICTS is None:
         return []
 
@@ -135,21 +147,14 @@ def get_trees():
         reader = csv.DictReader(f)
 
         for row in reader:
-
             try:
                 lat = float(row["lat"])
                 lon = float(row["lon"])
                 point = Point(lon, lat)
 
-                # check if inside ANY of the 10 sampled districts
                 for _, district in CURRENT_DISTRICTS.iterrows():
-
                     if district.geometry.contains(point):
-
-                        trees.append({
-                            "lat": lat,
-                            "lon": lon
-                        })
+                        trees.append({"lat": lat, "lon": lon})
                         break
 
             except Exception as e:

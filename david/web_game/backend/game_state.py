@@ -7,11 +7,38 @@ class GameState:
 
         self.elegedettseg = 1000
         self.szakertelem = 500
-        self.furgon = 200
+        self.furgon = 1000
+
+        # PLAYER POSITION
+        self.player_lat = 47.4979
+        self.player_lon = 19.0402
+
+        self.budapest_lat = 47.4979
+        self.budapest_lon = 19.0402
+
+    def reset_touring(self):
+        self.furgon = 1000
+        self.reset_position()
+    
+    def reset_position(self):
+        self.player_lat = self.budapest_lat
+        self.player_lon = self.budapest_lon
+
+    def can_move(self, cost):
+        return cost <= self.furgon
+
+    def move_player(self, lat, lon, cost):
+
+        # safety check (single source of truth)
+        if not self.can_move(cost):
+            return False
+
+        self.furgon -= cost
+        self.player_lat = lat
+        self.player_lon = lon
+        return True
 
     def next_turn(self):
-
-        # time progression (30 min per turn)
         self.minute += 30
 
         while self.minute >= 60:
@@ -22,7 +49,6 @@ class GameState:
             self.hour -= 24
             self.day += 1
 
-        # resource changes per turn
         self.elegedettseg -= 1
         self.szakertelem += 1
 
