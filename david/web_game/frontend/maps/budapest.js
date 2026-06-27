@@ -55,6 +55,12 @@ async function loadBudapestTrees() {
                     opacity: 0.95
                 }
             );
+            
+            marker.on("click", () => {
+                if (typeof window.checkMissionTree === "function") {
+                    window.checkMissionTree(tree.id);
+                }
+            });
 
             markers.push(marker);
         }

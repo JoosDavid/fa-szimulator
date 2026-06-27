@@ -11,15 +11,28 @@ from fastapi import HTTPException
 
 from shapely.geometry import Point
 from pydantic import BaseModel
-import csv
+
 import math
 import pandas as pd
 
 from backend.quiz import router as quiz_router
 from backend.game_state import GameState
 from backend.geo import DISTRICTS
+from backend.missions import MissionManager
+
 
 TREES = pd.read_csv("backend/dendro_final.csv")
+
+@lru_cache(maxsize=1)
+def load_budapest_tree_sample():
+    if not BUDAPEST_TREE_SAMPLE_PATH.exists():
+        raise HTTPException(
+            status_code=404,
+            detail="Missing budapest_trees_sample_10000.json. Run backend/create_budapest_tree_sample.py first.",
+        )
+
+    with BUDAPEST_TREE_SAMPLE_PATH.open("r", encoding="utf-8") as f:
+        return json.load(f)
 
 app = FastAPI()
 
@@ -47,6 +60,9 @@ app.include_router(quiz_router)
 
 game = GameState()
 
+mission_manager = MissionManager(load_budapest_tree_sample)
+
+
 # -----------------------------
 # STATE
 # -----------------------------
@@ -58,26 +74,72 @@ def get_state():
         "szakertelem": game.szakertelem,
         "furgon": game.furgon,
         "player_lat": game.player_lat,
-        "player_lon": game.player_lon
+        "player_lon": game.player_lon,
+        "quiz_used_this_turn": game.quiz_used_this_turn,
+        "quiz_correct_rewards_this_turn": game.quiz_correct_rewards_this_turn,
+        "touring_goal": game.touring_goal,
+        "touring_unlocked": game.touring_unlocked,
     }
+
+
+app.include_router(
+        mission_manager.create_router(
+            game=game,
+            get_state=get_state,
+        )
+    )
 
 # -----------------------------
 # TIME
 # -----------------------------
 @app.post("/end_turn")
 def end_turn():
-    game.next_turn()
-    return get_state()
+    incomplete_count = mission_manager.count_incomplete_missions()
+
+    turn_summary = game.next_turn(
+        incomplete_missions_count=incomplete_count
+    )
+
+    mission_manager.start_new_turn()
+
+    state = get_state()
+    state["turn_summary"] = turn_summary
+
+    return state
+
+@app.post("/quiz/start")
+def quiz_start():
+    allowed = game.start_quiz()
+
+    if not allowed:
+        return {
+            "allowed": False,
+            "reason": "Ebben a körben már volt móka.",
+            "state": get_state(),
+        }
+
+    return {
+        "allowed": True,
+        "state": get_state(),
+    }
 
 @app.post("/quiz/correct")
+@app.post("/quiz/correct")
 def quiz_correct():
-    game.szakertelem += 1
+    rewarded = game.reward_quiz_correct_answer()
+
+    if not rewarded:
+        return {
+            "success": False,
+            "reason": "Ebben a körben már nem kaphatsz több szakértelmet a mókából.",
+            "state": get_state(),
+        }
+
     return {
-        "time": game.get_time(),
-        "elegedettseg": game.elegedettseg,
-        "szakertelem": game.szakertelem,
-        "furgon": game.furgon
+        "success": True,
+        "state": get_state(),
     }
+
 @app.post("/reset")
 def reset():
     game.reset_touring()
@@ -92,12 +154,23 @@ CURRENT_DISTRICTS = None
 def start_touring():
     global CURRENT_DISTRICTS
 
+    if not game.touring_unlocked:
+        return {
+            "success": False,
+            "reason": f"A túrázáshoz legalább {game.touring_goal} elégedettség kell.",
+            "state": get_state(),
+        }
+
     CURRENT_DISTRICTS = DISTRICTS.sample(6).copy()
     CURRENT_DISTRICTS = CURRENT_DISTRICTS.to_crs(epsg=4326)
 
     game.reset_touring()
 
-    return {"count": len(CURRENT_DISTRICTS)}
+    return {
+        "success": True,
+        "count": len(CURRENT_DISTRICTS),
+        "state": get_state(),
+    }
 
 @app.get("/touring/districts")
 def get_districts():
@@ -165,21 +238,10 @@ DATA_DIR = Path(__file__).resolve().parent / "data"
 BUDAPEST_TREE_SAMPLE_PATH = DATA_DIR / "budapest_trees_sample_10000.json"
 
 
-@lru_cache(maxsize=1)
-def load_budapest_tree_sample():
-    if not BUDAPEST_TREE_SAMPLE_PATH.exists():
-        raise HTTPException(
-            status_code=404,
-            detail="Missing budapest_trees_sample_10000.json. Run backend/create_budapest_tree_sample.py first.",
-        )
-
-    with BUDAPEST_TREE_SAMPLE_PATH.open("r", encoding="utf-8") as f:
-        return json.load(f)
-
-
 @app.get("/trees/budapest")
 def get_budapest_trees():
     return load_budapest_tree_sample()
+   
 
 # -----------------------------
 # DISTANCE FUNCTION
@@ -237,3 +299,10 @@ def move(req: MoveRequest):
         "player_lon": game.player_lon,
         "cost": cost
     }
+
+app.include_router(
+    mission_manager.create_router(
+        game=game,
+        get_state=get_state,
+    )
+)

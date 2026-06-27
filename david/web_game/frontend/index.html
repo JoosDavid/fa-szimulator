@@ -95,6 +95,25 @@
     </div>
 </div>
 
+<div id="missionsPanel" class="side-panel hidden">
+    <button class="close-panel-button" onclick="closeMissions()">×</button>
+
+    <h2>Küldetések</h2>
+
+    <p>
+        Keresd meg a megadott fát a térképen. Ha rákattintasz a megfelelő fára,
+        és van elég szakértelmed, teljesíted a küldetést.
+    </p>
+
+    <button onclick="newMissions()">Új küldetések</button>
+
+    <div id="missionFeedback"></div>
+
+    <div id="missionsList">
+        A küldetések még nőnek...
+    </div>
+</div>
+
 <!-- Leaflet JS must be before your map scripts -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
@@ -116,3 +135,4 @@
 <!-- UI -->
 <script src="/static/app.js?v=1"></script>
 <script src="/static/quiz.js"></script>
+<script src="/static/missions.js"></script>

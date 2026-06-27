@@ -163,6 +163,7 @@ body {
 
 .quiz-option:hover {
     background: #e8f2e8;
+}
 .edge-distance-tooltip {
 
     background: rgba(30, 30, 30, 0.9);
@@ -175,4 +176,38 @@ body {
 
     font-size: 13px;
     font-weight: bold;
+}
+
+.mission-card {
+    border: 1px solid #ddd;
+    padding: 14px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    background: #fafafa;
+}
+
+.mission-card h3 {
+    margin-top: 0;
+}
+
+.mission-card.completed {
+    background: #e4f8df;
+    border-color: #7ac66d;
+}
+
+#missionFeedback {
+    margin: 12px 0;
+    font-weight: 600;
+}
+
+.mission-success {
+    background: #d9f7d3;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.mission-fail {
+    background: #ffe1e1;
+    padding: 10px;
+    border-radius: 8px;
 }

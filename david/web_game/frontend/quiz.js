@@ -28,10 +28,32 @@ async function openLearning() {
     await loadStories();
 }
 async function openQuizGame() {
+    const startResponse = await fetch("/quiz/start", {
+        method: "POST"
+    });
+
+    const startData = await startResponse.json();
+
+    window.renderState(startData.state);
+
+    if (!startData.allowed) {
+        document.getElementById("quizView").classList.remove("hidden");
+        document.getElementById("learningView").classList.add("hidden");
+
+        document.getElementById("quizQuestionBox").innerHTML = `
+            <p>${startData.reason}</p>
+            <p>Új mókát csak a következő körben indíthatsz.</p>
+        `;
+
+        return;
+    }
+
     document.getElementById("quizView").classList.remove("hidden");
     document.getElementById("learningView").classList.add("hidden");
+
     await startQuiz();
 }
+
 async function loadStories() {
     const storiesList = document.getElementById("storiesList");
     storiesList.innerHTML = "A történetek még nőnek...";
@@ -106,10 +128,13 @@ function checkAnswer(selectedOption) {
     if (selectedOption === q.correct_option) {
     score += 1;
 
-    fetch("/quiz/correct", {
-        method: "POST"
-    })
-    .then(() => loadState());
+    fetch("/quiz/correct", { method: "POST" })
+        .then((res) => res.json())
+        .then((data) => {
+            if (data.state) {
+                window.renderState(data.state);
+            }
+        });
 
     feedback.innerHTML = `
         <p>Magam se mondhattam volna jobban!</p>
