@@ -87,14 +87,14 @@ function showCurrentQuestion() {
     if (currentQuestionIndex >= quizQuestions.length) {
         quizQuestionBox.innerHTML = `
             <h4>A tudás elültetve!</h4>
-            <p>Your score: ${score} / ${quizQuestions.length}</p>
-            <button type="button" onclick="startQuiz()">Play again</button>
+            <p>Eredményed: ${score} / ${quizQuestions.length}</p>
+            <button type="button" onclick="startQuiz()">Újra játszom</button>
         `;
         return;
     }
     const q = quizQuestions[currentQuestionIndex];
     quizQuestionBox.innerHTML = `
-        <p><strong>Question ${currentQuestionIndex + 1} / ${quizQuestions.length}</strong></p>
+        <p><strong>Kérdés ${currentQuestionIndex + 1} / ${quizQuestions.length}</strong></p>
         <p>${q.question}</p>
 
         <button type="button" class="quiz-option" data-option="A">A: ${q.options.A}</button>
@@ -126,22 +126,22 @@ function checkAnswer(selectedOption) {
         }
     });
     if (selectedOption === q.correct_option) {
-    score += 1;
+        score += 1;
 
-    fetch("/quiz/correct", { method: "POST" })
-        .then((res) => res.json())
-        .then((data) => {
-            if (data.state) {
-                window.renderState(data.state);
-            }
-        });
+        fetch("/quiz/correct", { method: "POST" })
+            .then((res) => res.json())
+            .then((data) => {
+                if (data.state) {
+                    window.renderState(data.state);
+                }
+            });
 
-    feedback.innerHTML = `
-        <p>Magam se mondhattam volna jobban!</p>
-        <p>${q.explanation}</p>
-        <button id="nextQuestionBtn">Következő kérdés</button>
-    `;
-} else {
+        feedback.innerHTML = `
+            <p>Magam se mondhattam volna jobban!</p>
+            <p>${q.explanation}</p>
+            <button type="button" id="nextQuestionBtn">Következő kérdés</button>
+        `;
+    } else {
         feedback.innerHTML = `
             <p><strong>Tévedsz.</strong></p>
             <p>Helyes válasz: ${q.correct_answer}</p>

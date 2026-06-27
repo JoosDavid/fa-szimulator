@@ -21,7 +21,16 @@ from backend.geo import DISTRICTS
 from backend.missions import MissionManager
 
 
-TREES = pd.read_csv("backend/dendro_final.csv")
+# -----------------------------
+# PATHS (resolved relative to this file, not the working directory)
+# -----------------------------
+BASE_DIR = Path(__file__).resolve().parent
+FRONTEND_DIR = BASE_DIR.parent / "frontend"
+DATA_DIR = BASE_DIR / "data"
+BUDAPEST_TREE_SAMPLE_PATH = DATA_DIR / "budapest_trees_sample_10000.json"
+
+TREES = pd.read_csv(BASE_DIR / "dendro_final.csv")
+
 
 @lru_cache(maxsize=1)
 def load_budapest_tree_sample():
@@ -39,11 +48,11 @@ app = FastAPI()
 # -----------------------------
 # STATIC
 # -----------------------------
-app.mount("/static", StaticFiles(directory="frontend"), name="static")
+app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 
 @app.get("/")
 def home():
-    return FileResponse("frontend/index.html")
+    return FileResponse(FRONTEND_DIR / "index.html")
 
 # -----------------------------
 # CORS
@@ -124,7 +133,6 @@ def quiz_start():
     }
 
 @app.post("/quiz/correct")
-@app.post("/quiz/correct")
 def quiz_correct():
     rewarded = game.reward_quiz_correct_answer()
 
@@ -159,14 +167,14 @@ def start_touring():
             "state": get_state(),
         }
 
-    CURRENT_DISTRICTS = DISTRICTS.sample(6).copy()
-    CURRENT_DISTRICTS = CURRENT_DISTRICTS.to_crs(epsg=4326)
+    game.current_districts = DISTRICTS.sample(6).to_crs(epsg=4326).copy()
+    game.visited_districts = set()
 
     game.reset_touring()
 
     return {
         "success": True,
-        "count": len(CURRENT_DISTRICTS),
+        "count": len(game.current_districts),
         "state": get_state(),
     }
 
@@ -241,10 +249,6 @@ def get_trees():
 
     return trees
 
-DATA_DIR = Path(__file__).resolve().parent / "data"
-BUDAPEST_TREE_SAMPLE_PATH = DATA_DIR / "budapest_trees_sample_10000.json"
-
-
 @app.get("/trees/budapest")
 def get_budapest_trees():
     return load_budapest_tree_sample()
@@ -253,6 +257,8 @@ def get_budapest_trees():
 # -----------------------------
 # DISTANCE FUNCTION
 # -----------------------------
+# Note: an intentional twin of this lives in frontend/maps/edges.js, used there
+# only to label edge tooltips. The backend value is the authoritative move cost.
 def haversine(lat1, lon1, lat2, lon2):
     R = 6371
 
@@ -299,12 +305,13 @@ def move(req: MoveRequest):
 
     game.move_player(req.lat, req.lon, cost)
 
-    point = Point(req.lon, req.lat)
+    if game.current_districts is not None:
+        point = Point(req.lon, req.lat)
 
-    for _, district in game.current_districts.iterrows():
-        if district.geometry.contains(point):
-            game.visited_districts.add(district["district_id"])
-            break
+        for _, district in game.current_districts.iterrows():
+            if district.geometry.contains(point):
+                game.visited_districts.add(district["district_id"])
+                break
 
     return {
         "success": True,
@@ -313,10 +320,3 @@ def move(req: MoveRequest):
         "player_lon": game.player_lon,
         "cost": cost
     }
-
-app.include_router(
-    mission_manager.create_router(
-        game=game,
-        get_state=get_state,
-    )
-)

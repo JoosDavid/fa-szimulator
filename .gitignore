@@ -1,3 +1,17 @@
 __pycache__
 .vscode
+
+# virtual environments
+venv/
+.venv/
+.venv-1/
+david/web_game/venv/
+
+# large data files
 backend/data/budapest_trees_full.csv
+
+# data-prep scratch artifacts (kept locally in data_prep/, not committed)
+data_prep/bad_rows.json
+data_prep/dendro.csv
+data_prep/dendro_fixed_david.csv
+data_prep/dendro_butyking.ipynb
