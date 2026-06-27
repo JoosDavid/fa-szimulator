@@ -181,3 +181,60 @@ def load_budapest_tree_sample():
 @app.get("/trees/budapest")
 def get_budapest_trees():
     return load_budapest_tree_sample()
+
+# -----------------------------
+# DISTANCE FUNCTION
+# -----------------------------
+def haversine(lat1, lon1, lat2, lon2):
+    R = 6371
+
+    phi1 = math.radians(lat1)
+    phi2 = math.radians(lat2)
+
+    dphi = math.radians(lat2 - lat1)
+    dlambda = math.radians(lon2 - lon1)
+
+    a = (
+        math.sin(dphi/2)**2 +
+        math.cos(phi1) * math.cos(phi2) *
+        math.sin(dlambda/2)**2
+    )
+
+    return 2 * R * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+# -----------------------------
+# MOVE SYSTEM (FURGON LOGIC)
+# -----------------------------
+class MoveRequest(BaseModel):
+    lat: float
+    lon: float
+
+@app.post("/move")
+def move(req: MoveRequest):
+
+    cost = haversine(
+        game.player_lat,
+        game.player_lon,
+        req.lat,
+        req.lon
+    )
+
+    if not game.can_move(cost):
+        return {
+            "success": False,
+            "reason": "Not enough furgon",
+            "furgon": game.furgon,
+            "cost": cost,
+            "player_lat": game.player_lat,
+            "player_lon": game.player_lon
+        }
+
+    game.move_player(req.lat, req.lon, cost)
+
+    return {
+        "success": True,
+        "furgon": game.furgon,
+        "player_lat": game.player_lat,
+        "player_lon": game.player_lon,
+        "cost": cost
+    }
